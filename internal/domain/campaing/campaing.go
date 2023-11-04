@@ -1,46 +1,45 @@
 package campaing
 
 import (
-	"errors"
+	internalerrors "emailn/internal/interna-lErrors"
 	"time"
 
 	"github.com/rs/xid"
 )
 
 type Contact struct {
-	Email string
+	Email string `validate:"email"`
 }
 
 type Campaing struct {
-	Id        string
-	Name      string
-	CreatedOn time.Time
-	Content   string
-	Contacts  []Contact
+	Id        string    `validate:"required"`
+	Name      string    `validate:"min=3,max=30"`
+	CreatedOn time.Time `validate:"required"`
+	Content   string    `validate:"min=3,max=1024"`
+	Contacts  []Contact `validate:"min=1,dive"`
 }
 
 //init func, "constructor in Java"
 
 func NewCampaing(name string, content string, emails []string) (*Campaing, error) {
 
-	if name == "" {
-		return nil, errors.New("name is required")
-	} else if content == "" {
-		return nil, errors.New("content is required")
-	} else if len(emails) == 0 {
-		return nil, errors.New("contact is required")
-	}
-
 	contacts := make([]Contact, len(emails))
 	for index, email := range emails {
 		contacts[index].Email = email
 	}
 
-	return &Campaing{
+	campaing := &Campaing{
 		Id:        xid.New().String(),
 		Name:      name,
 		CreatedOn: time.Now(),
 		Content:   content,
 		Contacts:  contacts,
-	}, nil
+	}
+
+	err := internalerrors.ValidateStruct(campaing)
+
+	if err == nil {
+		return campaing, nil
+	}
+	return nil, err
 }
